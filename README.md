@@ -1,2 +1,2 @@
 # timer-app
-Client based timer using Spring Booy.
+Client based timer using Spring Boot.
