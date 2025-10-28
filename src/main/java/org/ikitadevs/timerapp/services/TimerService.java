@@ -80,6 +80,27 @@ public class TimerService {
     }
 
     @Transactional
+    public TimerResponseDto pauseTimer(UUID uuid) {
+        Timer timer = getByUuidWithAvatar(uuid);
+        timer.pause();
+        timerRepository.save(timer);
+        return timerMapper.toTimerResponseDto(timer);
+    }
+
+    @Transactional TimerResponseDto resumeTimer(UUID uuid) {
+        Timer timer = getByUuidWithAvatar(uuid);
+        timer.resume();
+        timerRepository.save(timer);
+        return timerMapper.toTimerResponseDto(timer);
+    }
+
+    @Transactional TimerResponseDto deleteTimer(UUID uuid) {
+        Timer timer = getByUuidWithAvatar(uuid);
+        timerRepository.save(timer);
+        return timerMapper.toTimerResponseDto(timer);
+    }
+
+    @Transactional
     public TimerResponseDto createTimer(UUID uuid, TimerCreateDto timerCreateDto) {
         String name = timerCreateDto.getName();
         Long hours = timerCreateDto.getHours();
@@ -92,6 +113,4 @@ public class TimerService {
         timerRepository.save(timer);
         return timerMapper.toTimerResponseDto(timer);
     }
-
-
 }
