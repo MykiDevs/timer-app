@@ -15,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.nio.file.AccessDeniedException;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -89,6 +90,15 @@ public class GlobalApiExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .error("File validation")
                 .message(ex.getMessage())
+                .build();
+        return new ResponseEntity<>(errorResponse, status);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .error("You haven't access!")
                 .build();
         return new ResponseEntity<>(errorResponse, status);
     }
