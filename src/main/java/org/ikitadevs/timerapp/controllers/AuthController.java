@@ -1,8 +1,10 @@
 package org.ikitadevs.timerapp.controllers;
 
 
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.ikitadevs.timerapp.Views;
 import org.ikitadevs.timerapp.dto.request.UserCreateDto;
 import org.ikitadevs.timerapp.dto.request.UserLoginDto;
 import org.ikitadevs.timerapp.dto.response.UserResponseDto;
@@ -33,18 +35,21 @@ public class AuthController {
     private final JwtService jwtService;
 
     @PostMapping("/login")
+    @JsonView(Views.Public.class)
     public ResponseEntity<?> loginUser(@Valid @RequestBody UserLoginDto userLoginDto) {
         UserResponseDto userResponseDto = userService.loginUser(userLoginDto);
         return ResponseEntity.ok(userResponseDto);
     }
 
     @PostMapping("/signup")
+    @JsonView(Views.Public.class)
     public ResponseEntity<?> signupUser(@Valid @RequestBody UserCreateDto userCreateDto) {
         UserResponseDto userResponseDto = userService.createUser(userCreateDto);
         return ResponseEntity.ok(userResponseDto);
     }
 
     @PostMapping("/refresh")
+    @JsonView(Views.Public.class)
     public ResponseEntity<?> refreshUser(@RequestBody Map<String, String> body) {
         String oldRefreshToken = body.get("refreshToken");
         if(oldRefreshToken == null || oldRefreshToken.isEmpty()) {
@@ -75,5 +80,4 @@ public class AuthController {
         userResponseDto.setRefreshToken(newRefreshToken);
         return ResponseEntity.ok(userResponseDto);
     }
-
 }

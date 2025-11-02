@@ -8,8 +8,10 @@ import org.ikitadevs.timerapp.dto.request.TimerCreateDto;
 import org.ikitadevs.timerapp.dto.request.TimerUpdateDto;
 import org.ikitadevs.timerapp.dto.response.PaginationResponseDto;
 import org.ikitadevs.timerapp.dto.response.TimerResponseDto;
+import org.ikitadevs.timerapp.dto.response.UserResponseDto;
 import org.ikitadevs.timerapp.entities.Timer;
 import org.ikitadevs.timerapp.entities.User;
+import org.ikitadevs.timerapp.entities.enums.TimerState;
 import org.ikitadevs.timerapp.exceptions.InvalidTimerTimeException;
 import org.ikitadevs.timerapp.mappers.TimerMapper;
 import org.ikitadevs.timerapp.repositories.TimerRepository;
@@ -37,55 +39,50 @@ public class TimerService {
 
     }
 
-
-    @Transactional(readOnly = true)
-    public Timer getByUuidWithAvatar(UUID uuid) {
-        return timerRepository.findByUuid(uuid).orElseThrow(() -> new EntityNotFoundException("Timer with this UUID doesn't exists!"));
-    }
-
     @Transactional(readOnly = true)
     public Timer getByUuidAndUser(UUID uuid, User currentUser) {
         return timerRepository.findByUuidAndUser(uuid, currentUser).orElseThrow(() -> new EntityNotFoundException("Timer with this UUID doesn't exists!"));
     }
 
-
     @Transactional(readOnly = true)
-    public PaginationResponseDto<List<TimerResponseDto>> getTimersWithPaginationByUser(PaginationRequestDto paginationRequestDto, Long userId) {
+    public PaginationResponseDto<List<TimerResponseDto>> getAllTimersWithPaginationByUser(PaginationRequestDto paginationRequestDto, UUID uuid) {
         Sort sort = Sort.by(Sort.Direction.fromString(paginationRequestDto.getSortDirection()), paginationRequestDto.getSortBy());
         Pageable pageable = PageRequest.of(paginationRequestDto.getPage(), paginationRequestDto.getSize(), sort);
-        Page<Timer> timerPage = timerRepository.findAllByUser_Id(pageable, userId);
-        List<TimerResponseDto> timerList = timerPage.getContent().stream()
+        Page<Timer> timersPage = timerRepository.findAllByUser_Uuid(pageable, uuid);
+        if(timersPage.getTotalPages() == 0) throw new EntityNotFoundException("This user has no timers");
+        List<TimerResponseDto> timersList = timersPage.getContent().stream()
                 .map(timerMapper::toTimerResponseDto)
                 .toList();
-        PaginationResponseDto<List<TimerResponseDto>> paginationResponseDto = new PaginationResponseDto<>();
-        paginationResponseDto.setContent(timerList);
-        paginationResponseDto.setPage(timerPage.getNumber());
-        paginationResponseDto.setSize(timerPage.getSize());
-        paginationResponseDto.setTotalPages(timerPage.getTotalPages());
-        paginationResponseDto.setTotalElements(timerPage.getNumberOfElements());
-        paginationResponseDto.setSortBy(paginationRequestDto.getSortBy());
-        paginationResponseDto.setSortDirection(paginationRequestDto.getSortDirection());
-        return paginationResponseDto;
+        return new PaginationResponseDto<>(
+                timersList,
+                timersPage.getNumber(),
+                timersPage.getSize(),
+                paginationRequestDto.getSortBy(),
+                paginationRequestDto.getSortDirection(),
+                timersPage.getNumberOfElements(),
+                timersPage.getTotalPages()
+        );
     }
 
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyRole('ADMIN')")
     public PaginationResponseDto<List<TimerResponseDto>> getAllTimersWithPagination(PaginationRequestDto paginationRequestDto) {
         Sort sort = Sort.by(Sort.Direction.fromString(paginationRequestDto.getSortDirection()), paginationRequestDto.getSortBy());
         Pageable pageable = PageRequest.of(paginationRequestDto.getPage(), paginationRequestDto.getSize(), sort);
-        Page<Timer> timerPage = timerRepository.findAll(pageable);
-        List<TimerResponseDto> timerList = timerPage.getContent().stream()
+        Page<Timer> timersPage = timerRepository.findAll(pageable);
+
+        if(timersPage.getTotalPages() == 0) throw new EntityNotFoundException("There is no timers!");
+        List<TimerResponseDto> timersList = timersPage.getContent().stream()
                 .map(timerMapper::toTimerResponseDto)
                 .toList();
-        PaginationResponseDto<List<TimerResponseDto>> paginationResponseDto = new PaginationResponseDto<>();
-        paginationResponseDto.setContent(timerList);
-        paginationResponseDto.setPage(timerPage.getNumber());
-        paginationResponseDto.setSize(timerPage.getSize());
-        paginationResponseDto.setTotalElements(timerPage.getNumberOfElements());
-        paginationResponseDto.setTotalPages(timerPage.getTotalPages());
-        paginationResponseDto.setSortBy(paginationRequestDto.getSortBy());
-        paginationResponseDto.setSortDirection(paginationRequestDto.getSortDirection());
-        return paginationResponseDto;
+        return new PaginationResponseDto<>(
+                timersList,
+                timersPage.getNumber(),
+                timersPage.getSize(),
+                paginationRequestDto.getSortBy(),
+                paginationRequestDto.getSortDirection(),
+                timersPage.getNumberOfElements(),
+                timersPage.getTotalPages()
+        );
     }
 
     @Transactional
@@ -98,7 +95,7 @@ public class TimerService {
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN') or @timerSecurityService.isOwner(#uuid, principal)")
     public TimerResponseDto startTimer(UUID uuid) {
-        Timer timer = getByUuidWithAvatar(uuid);
+        Timer timer = getByUuid(uuid);
         timer.start();
         timerRepository.save(timer);
         return timerMapper.toTimerResponseDto(timer);
@@ -107,7 +104,7 @@ public class TimerService {
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN') or @timerSecurityService.isOwner(#uuid, principal)")
     public TimerResponseDto pauseTimer(UUID uuid) {
-        Timer timer = getByUuidWithAvatar(uuid);
+        Timer timer = getByUuid(uuid);
         timer.pause();
         timerRepository.save(timer);
         return timerMapper.toTimerResponseDto(timer);
@@ -116,14 +113,16 @@ public class TimerService {
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN') or @timerSecurityService.isOwner(#uuid, principal)")
     public TimerResponseDto resumeTimer(UUID uuid) {
-        Timer timer = getByUuidWithAvatar(uuid);
+        Timer timer = getByUuid(uuid);
         timer.resume();
         timerRepository.save(timer);
         return timerMapper.toTimerResponseDto(timer);
     }
 
-    @Transactional TimerResponseDto deleteTimer(UUID uuid) {
-        Timer timer = getByUuidWithAvatar(uuid);
+    @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN') or @timerSecurityService.isOwner(#uuid, principal)")
+    public TimerResponseDto deleteTimer(UUID uuid) {
+        Timer timer = getByUuid(uuid);
         timerRepository.save(timer);
         return timerMapper.toTimerResponseDto(timer);
     }

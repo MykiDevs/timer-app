@@ -18,7 +18,7 @@ public class TimerSecurityService {
     private final TimerRepository timerRepository;
 
 
-    public boolean isOwner(UUID uuid, User currentUser) {
-        return timerRepository.existsByUuidAndUser(uuid, currentUser);
+    public boolean isOwner(UUID uuidTimer, User currentUser) {
+        return timerRepository.existsByUuidAndUser(uuidTimer, currentUser);
     }
 }

@@ -19,6 +19,5 @@ public class Avatar {
     String path;
 
     @OneToOne(mappedBy = "avatar", fetch = FetchType.EAGER)
-    @JsonBackReference
     private User user;
 }

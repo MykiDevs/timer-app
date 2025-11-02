@@ -6,17 +6,14 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
-import lombok.Generated;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.ikitadevs.timerapp.entities.enums.Role;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.*;
 
-@RequiredArgsConstructor
+@NoArgsConstructor
 @Getter
 @Setter
 @Entity
@@ -38,9 +35,8 @@ public class User implements UserDetails {
     @NotEmpty(message = "Password can't be empty!")
     private String password;
 
-    @OneToOne(cascade = CascadeType.ALL, optional = true, fetch = FetchType.EAGER)
+    @OneToOne(cascade = CascadeType.ALL, optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "avatar_id")
-    @JsonManagedReference
     private Avatar avatar;
 
     @Email
@@ -48,9 +44,8 @@ public class User implements UserDetails {
     @NotEmpty(message = "Email can't be empty!")
     private String email;
 
-    private boolean isAdmin = false;
-
     private boolean active;
+
     @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "users_role", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
@@ -72,6 +67,16 @@ public class User implements UserDetails {
     @Override
     public String getUsername() {
         return email;
+    }
+
+
+    @Transient
+    public boolean isAdmin() {
+        if(getAuthorities() == null) {
+            return false;
+        }
+        return getAuthorities().stream()
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
     }
 
     @PrePersist

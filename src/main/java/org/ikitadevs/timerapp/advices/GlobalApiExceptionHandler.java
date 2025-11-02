@@ -1,6 +1,8 @@
 package org.ikitadevs.timerapp.advices;
 
 
+import io.jsonwebtoken.Jwt;
+import io.jsonwebtoken.JwtException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.OptimisticLockException;
 import org.ikitadevs.timerapp.dto.response.ErrorResponse;
@@ -99,6 +101,7 @@ public class GlobalApiExceptionHandler {
         HttpStatus status = HttpStatus.FORBIDDEN;
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .error("You haven't access!")
+                .message(ex.getMessage())
                 .build();
         return new ResponseEntity<>(errorResponse, status);
     }
@@ -112,4 +115,16 @@ public class GlobalApiExceptionHandler {
                 .build();
         return new ResponseEntity<>(errorResponse, status);
     }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ErrorResponse> handleJwtException(JwtException ex) {
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .error("Auth token error!")
+                .message(ex.getMessage())
+                .build();
+        return new ResponseEntity<>(errorResponse, status);
+    }
+
+
 }

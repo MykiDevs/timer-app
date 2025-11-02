@@ -62,7 +62,7 @@ public class JwtService {
         extraClaims.put("email", user.getEmail());
         extraClaims.put("uuid", user.getUuid());
         extraClaims.put("active", user.isActive());
-        return buildToken(extraClaims, user.getId().toString(), jwtAccessTokenExpiration);
+        return buildToken(extraClaims, user.getUuid().toString(), jwtAccessTokenExpiration);
     }
 
     public String generateRefreshToken(Map<String, Object> extraClaims, UUID uuid) {
@@ -78,24 +78,14 @@ public class JwtService {
         return extractExpiration(token).before(new Date());
     }
 
-    public boolean validateToken(String token) {
-        try {
-            extractAllClaims(token);
-            return true;
-        } catch (ClaimJwtException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
         private Date extractExpiration (String token){
             return extractClaim(token, Claims::getExpiration);
         }
 
         private String buildToken (
-                Map < String, Object > extraClaims,
+                Map <String, Object> extraClaims,
                 String subject,
-        long expiration
+                long expiration
     ){
             return Jwts
                     .builder()
@@ -108,13 +98,17 @@ public class JwtService {
         }
 
         private Claims extractAllClaims (String token){
+        try {
             return Jwts
                     .parserBuilder()
                     .setSigningKey(getSigningKey())
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-        }
+        } catch (JwtException | IllegalArgumentException e) {
+        throw e;
+    }
+    }
 
         private Key getSigningKey () {
             byte[] keyBytes = Decoders.BASE64.decode(secretKey);

@@ -31,14 +31,13 @@ public class Timer {
         this.timerState = TimerState.CREATED;
     }
 
-
     @Column(nullable = false, unique = true, updatable = false)
     private UUID uuid;
 
     @Id
     @SequenceGenerator(name ="timer_seq_id", sequenceName = "timer_seq_id", allocationSize = 20)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "timer_seq_id")
-    Long id;
+    private Long id;
 
 
     @Enumerated(EnumType.STRING)
