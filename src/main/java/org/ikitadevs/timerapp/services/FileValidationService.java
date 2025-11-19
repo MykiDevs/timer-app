@@ -6,11 +6,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 public abstract class FileValidationService {
     private final Tika tika = new Tika();
     public void validate(MultipartFile file, long maxSizeInMb, List<String> allowedExtensions, List<String> allowedMimetypes) {
         if(file.isEmpty()) throw new FileValidationException("File is empty!");
+        if(file.getOriginalFilename().isEmpty() || file.getOriginalFilename() == null) throw new FileValidationException("Filename is invalid!");
+        if((file.getOriginalFilename()).length() >  20) throw new FileValidationException("File name is too big!");
         validateSize(file.getSize(), maxSizeInMb);
         String extension = validateExtension(file.getOriginalFilename(), allowedExtensions);
         validateMimetype(file, allowedMimetypes, extension);
@@ -22,7 +25,7 @@ public abstract class FileValidationService {
     }
 
     private String validateExtension(String filename, List<String> allowedExtensions) throws FileValidationException {
-        if(filename == null || !filename.contains(".")) throw new FileValidationException("Recheck your filename!");
+        if(!filename.contains(".")) throw new FileValidationException("Recheck your filename!");
         String fileExtension = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
         if(!allowedExtensions.contains(fileExtension)) throw new FileValidationException("Extension of file is invalid! Allowed is " + allowedExtensions.toString());
         return fileExtension;

@@ -60,6 +60,12 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
+    public User getByUuidWithAvatar(UUID uuid) {
+        return userRepository.findByUuidWithAvatar(uuid)
+                .orElseThrow(() -> new EntityNotFoundException("User doesn't exists!"));
+    }
+
+    @Transactional(readOnly = true)
     public User getByEmailWithAvatar(String email) {
         return userRepository.findByEmailWithAvatar(email)
                 .orElseThrow(() -> new EntityNotFoundException("User doesn't exists!"));
@@ -96,7 +102,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(userCreateDto.getPassword()));
         user.setActive(true);
         user.setRoles(Set.of(Role.ROLE_USER));
-        userRepository.save(user);
+        saveUser(user);
         UserResponseDto userResponseDto = userMapper.toUserResponseDto(user);
         userResponseDto.setAccessToken(jwtService.generateAccessToken(user));
         userResponseDto.setRefreshToken(jwtService.generateRefreshToken(user));
@@ -118,20 +124,29 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponseDto updateOwnProfile(UserPatchDto userPatchDto, User currentUser) throws AccessDeniedException {
-        User oldUser = getByUuid(currentUser.getUuid());
-        if(!oldUser.getUuid().equals(currentUser.getUuid())) throw new AccessDeniedException("You haven't access to update this resource!");
+    public void updateUser(UserPatchDto userPatchDto, User userToUpdate) throws AccessDeniedException {
+        User oldUser = getByUuid(userToUpdate.getUuid());
+        if(!oldUser.getUuid().equals(userToUpdate.getUuid())) throw new AccessDeniedException("You haven't access to update this resource!");
         userMapper.UpdateUserFromDto(userPatchDto, oldUser);
-        if (userPatchDto.getPassword() != null) {
-            String password = passwordEncoder.encode(userPatchDto.getPassword());
+        if (userPatchDto.getOldPassword() != null && userPatchDto.getNewPassword() != null) {
+            if(!passwordEncoder.matches(userPatchDto.getOldPassword(), oldUser.getPassword())) throw new AccessDeniedException("Your passwords are different");
+            String password = passwordEncoder.encode(userPatchDto.getNewPassword());
             oldUser.setPassword(password);
         }
-        UserResponseDto userResponseDto = userMapper.toUserResponseDto(oldUser);
-        return userResponseDto;
     }
 
     @Transactional
-    public void deleteUser(User user) {
+    public void saveUser(User user) {
+            userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteCurrentUser(User user) {
         userRepository.delete(user);
+    }
+
+    @Transactional
+    public void deleteUserByUuid(UUID uuid) {
+        userRepository.deleteByUuid(uuid);
     }
 }

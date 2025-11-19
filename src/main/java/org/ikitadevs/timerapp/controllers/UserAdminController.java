@@ -2,6 +2,8 @@ package org.ikitadevs.timerapp.controllers;
 
 
 import com.fasterxml.jackson.annotation.JsonView;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.ikitadevs.timerapp.Views;
 import org.ikitadevs.timerapp.dto.request.PaginationRequestDto;
@@ -21,6 +23,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/admin/users")
+@Tag(name = "User management (Admin)", description = "Administrative operations for managing all users.")
 public class UserAdminController {
     private final UserService userService;
     private final UserMapper userMapper;
@@ -29,6 +32,7 @@ public class UserAdminController {
     @GetMapping
     @JsonView(Views.Admin.class)
     @PreAuthorize("hasAnyRole('ADMIN')")
+    @Operation(summary = "Get all users using pagination")
     public ResponseEntity<PaginationResponseDto<List<UserResponseDto>>> getAllUsersWithPagination(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -44,6 +48,7 @@ public class UserAdminController {
     @GetMapping("/profile")
     @JsonView(Views.Admin.class)
     @PreAuthorize("hasAnyRole('ADMIN')")
+    @Operation(summary = "Check admin's profile")
     public ResponseEntity<UserResponseDto> getProfileInfo(
             @AuthenticationPrincipal User currentUser
     ) {
@@ -55,6 +60,7 @@ public class UserAdminController {
     @PatchMapping("/{uuid}")
     @JsonView(Views.Admin.class)
     @PreAuthorize("hasAnyRole('ADMIN')")
+    @Operation(summary = "Get user info ")
     public ResponseEntity<UserResponseDto> getUserInfo(
             @PathVariable UUID uuid
             ) {
@@ -66,12 +72,12 @@ public class UserAdminController {
     @DeleteMapping("/{uuid}")
     @JsonView(Views.Admin.class)
     @PreAuthorize("hasAnyRole('ADMIN')")
+    @Operation(summary = "Delete user")
     public ResponseEntity<String> deleteUser(
             @PathVariable UUID uuid
     ) {
-        User user = userService.getByUuid(uuid);
-        userService.deleteUser(user);
-        return ResponseEntity.ok("User was deleted!");
+        userService.deleteUserByUuid(uuid);
+        return ResponseEntity.noContent().build();
     }
 
 }

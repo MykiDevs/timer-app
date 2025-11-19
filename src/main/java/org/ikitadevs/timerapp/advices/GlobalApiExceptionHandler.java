@@ -6,10 +6,7 @@ import io.jsonwebtoken.JwtException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.OptimisticLockException;
 import org.ikitadevs.timerapp.dto.response.ErrorResponse;
-import org.ikitadevs.timerapp.exceptions.InvalidTimerTimeException;
-import org.ikitadevs.timerapp.exceptions.FileValidationException;
-import org.ikitadevs.timerapp.exceptions.InvalidTimerOwnerException;
-import org.ikitadevs.timerapp.exceptions.UserAlreadyExistsException;
+import org.ikitadevs.timerapp.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -56,6 +53,7 @@ public class GlobalApiExceptionHandler {
     public ResponseEntity<ErrorResponse> handleInvalidTimerTimeException(InvalidTimerTimeException ex) {
         HttpStatus status = HttpStatus.FORBIDDEN;
         ErrorResponse errorResponse = ErrorResponse.builder()
+                .error("Timer error!")
                 .message(ex.getMessage())
                 .build();
         return new ResponseEntity<>(errorResponse, status);
@@ -68,7 +66,7 @@ public class GlobalApiExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .message(ex.getMessage())
                 .build();
-        return new ResponseEntity<>(errorResponse, status);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -96,22 +94,22 @@ public class GlobalApiExceptionHandler {
         return new ResponseEntity<>(errorResponse, status);
     }
 
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
-        HttpStatus status = HttpStatus.FORBIDDEN;
+    @ExceptionHandler(FileStorageException.class)
+    public ResponseEntity<ErrorResponse> handleFileStorageException(FileStorageException ex) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .error("You haven't access!")
+                .error("File storage")
                 .message(ex.getMessage())
                 .build();
         return new ResponseEntity<>(errorResponse, status);
     }
 
     @ExceptionHandler(OptimisticLockException.class)
-    public ResponseEntity<ErrorResponse> handleOptimisticLockException(OptimisticLockException ex) {
+    public ResponseEntity<ErrorResponse> handleOptimisticLockException() {
         HttpStatus status = HttpStatus.CONFLICT;
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .error("Data conflict")
-                .message("This timer was modified by another session. Please refresh and try again.")
+                .message("This data was modified by another session. Please refresh and try again.")
                 .build();
         return new ResponseEntity<>(errorResponse, status);
     }

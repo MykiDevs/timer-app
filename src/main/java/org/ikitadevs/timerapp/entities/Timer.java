@@ -23,7 +23,7 @@ public class Timer {
     @Version
     private Long version;
 
-    public Timer(String name, Long durationInHours, Long durationInMinutes, Long durationInSeconds) {
+    public Timer(String name, int durationInHours, int durationInMinutes, int durationInSeconds) {
         this.name = name;
         this.initialDuration = Duration.ofHours(durationInHours)
                 .plusMinutes(durationInMinutes)
@@ -97,5 +97,21 @@ public class Timer {
         if(this.uuid == null) {
             this.uuid = UUID.randomUUID();
         }
+    }
+
+    @Override
+    public String toString() {
+        return "Timer{" +
+                "version=" + version +
+                ", uuid=" + uuid +
+                ", id=" + id +
+                ", timerState=" + timerState +
+                ", name='" + name + '\'' +
+                ", initialDuration=" + initialDuration +
+                ", remainingDuration=" + remainingDuration +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
+                ", user=" + user +
+                '}';
     }
 }

@@ -3,6 +3,7 @@ package org.ikitadevs.timerapp.services;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.ikitadevs.timerapp.dto.request.PaginationRequestDto;
 import org.ikitadevs.timerapp.dto.request.TimerCreateDto;
 import org.ikitadevs.timerapp.dto.request.TimerUpdateDto;
@@ -28,6 +29,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TimerService {
     private final TimerMapper timerMapper;
     private final TimerRepository timerRepository;
@@ -45,10 +47,10 @@ public class TimerService {
     }
 
     @Transactional(readOnly = true)
-    public PaginationResponseDto<List<TimerResponseDto>> getAllTimersWithPaginationByUser(PaginationRequestDto paginationRequestDto, UUID uuid) {
+    public PaginationResponseDto<List<TimerResponseDto>> getAllTimersWithPaginationByUser(PaginationRequestDto paginationRequestDto, UUID user_uuid) {
         Sort sort = Sort.by(Sort.Direction.fromString(paginationRequestDto.getSortDirection()), paginationRequestDto.getSortBy());
         Pageable pageable = PageRequest.of(paginationRequestDto.getPage(), paginationRequestDto.getSize(), sort);
-        Page<Timer> timersPage = timerRepository.findAllByUser_Uuid(pageable, uuid);
+        Page<Timer> timersPage = timerRepository.findAllByUser_Uuid(pageable, user_uuid);
         if(timersPage.getTotalPages() == 0) throw new EntityNotFoundException("This user has no timers");
         List<TimerResponseDto> timersList = timersPage.getContent().stream()
                 .map(timerMapper::toTimerResponseDto)
@@ -121,21 +123,29 @@ public class TimerService {
 
     @Transactional
     @PreAuthorize("hasAnyRole('ADMIN') or @timerSecurityService.isOwner(#uuid, principal)")
-    public TimerResponseDto deleteTimer(UUID uuid) {
+    public TimerResponseDto finishTimer(UUID uuid) {
         Timer timer = getByUuid(uuid);
+        timer.finish();
         timerRepository.save(timer);
         return timerMapper.toTimerResponseDto(timer);
     }
 
     @Transactional
+    @PreAuthorize("hasAnyRole('ADMIN') or @timerSecurityService.isOwner(#uuid, principal)")
+    public void deleteTimer(UUID uuid) {
+        timerRepository.deleteTimerByUuid(uuid);
+    }
+
+    @Transactional
     public TimerResponseDto createTimer(UUID uuid, TimerCreateDto timerCreateDto) {
         String name = timerCreateDto.getName();
-        Long hours = timerCreateDto.getHours();
-        Long minutes = timerCreateDto.getMinutes();
-        Long seconds = timerCreateDto.getSeconds();
+        int hours = timerCreateDto.getHours();
+        int minutes = timerCreateDto.getMinutes();
+        int seconds = timerCreateDto.getSeconds();
         User user = userService.getByUuid(uuid);
-        if(hours == 0L && minutes == 0L && seconds == 0L) throw new InvalidTimerTimeException();
+        if(hours == 0 && minutes == 0 && seconds == 0) throw new InvalidTimerTimeException();
         Timer timer = new Timer(name, hours, minutes, seconds);
+        log.info("Timer was created: {}", timer);
         timer.setUser(user);
         timerRepository.save(timer);
         return timerMapper.toTimerResponseDto(timer);

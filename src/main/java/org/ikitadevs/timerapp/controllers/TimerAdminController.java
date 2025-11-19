@@ -2,6 +2,8 @@ package org.ikitadevs.timerapp.controllers;
 
 
 import com.fasterxml.jackson.annotation.JsonView;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.ikitadevs.timerapp.Views;
@@ -27,14 +29,17 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/admin/timers/")
+@Tag(name = "Timer Management (Admin)", description = "Administrative operations for managing all timers in the system.")
 public class TimerAdminController {
 
     private final TimerService timerService;
     private final TimerMapper timerMapper;
     private final UserService userService;
+
     @GetMapping
     @JsonView(Views.Admin.class)
     @PreAuthorize("hasAnyRole('ADMIN')")
+    @Operation(summary = "Get all timers using pagination")
     public ResponseEntity<?> getAllTimersWithPagination(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
@@ -49,11 +54,22 @@ public class TimerAdminController {
     @GetMapping("/{uuid}")
     @JsonView(Views.Admin.class)
     @PreAuthorize("hasAnyRole('ADMIN')")
+    @Operation(summary = "Get timer info by uuid")
     public ResponseEntity<TimerResponseDto> getTimerInfo(@PathVariable UUID uuid) {
         Timer timer = timerService.getByUuid(uuid);
         TimerResponseDto timerResponseDto = timerMapper.toTimerResponseDto(timer);
         return ResponseEntity.ok(timerResponseDto);
     }
 
+    @PatchMapping("/{uuid}")
+    @JsonView(Views.Admin.class)
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @Operation(summary = "Update timer by uuid")
+
+    public ResponseEntity<TimerResponseDto> updateTimer(@PathVariable UUID uuid,
+                                                        @RequestBody TimerUpdateDto timerUpdateDto) {
+        TimerResponseDto timerResponseDto = timerService.updateTimer(uuid, timerUpdateDto);
+        return ResponseEntity.ok(timerResponseDto);
+    }
 
 }

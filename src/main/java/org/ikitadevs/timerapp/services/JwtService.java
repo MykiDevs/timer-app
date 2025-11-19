@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.security.Key;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class JwtService {
@@ -27,9 +28,16 @@ public class JwtService {
     public UUID extractUuid(String token) {
         return UUID.fromString(extractClaim(token, Claims::getSubject));
     }
-
+    public String extractTokenType(String token) {
+        return (String) extractClaim(token, claims -> claims.get("tokenType"));
+    }
     public List<String> extractRoles(String token) {
-        return (List<String>) extractClaim(token, claims -> claims.get("roles"));
+        List<?> rolesList = (List<?>) extractClaim(token, claims -> claims.get("roles"));
+        if(rolesList == null) {
+            return null;
+        }
+
+        return rolesList.stream().filter(i -> i instanceof String).map(i -> ((String) i)).toList();
     }
 
     public String extractEmail(String token) {
@@ -50,7 +58,7 @@ public class JwtService {
     }
 
     public String generateRefreshToken(User user) {
-        return generateRefreshToken(new HashMap<>(), user.getUuid());
+        return generateRefreshToken(new HashMap<>(), user);
     }
 
 
@@ -62,12 +70,14 @@ public class JwtService {
         extraClaims.put("email", user.getEmail());
         extraClaims.put("uuid", user.getUuid());
         extraClaims.put("active", user.isActive());
+        extraClaims.put("tokenType", "access");
         return buildToken(extraClaims, user.getUuid().toString(), jwtAccessTokenExpiration);
     }
 
-    public String generateRefreshToken(Map<String, Object> extraClaims, UUID uuid) {
-        extraClaims.put("UUID", uuid);
-        return buildToken(extraClaims, uuid.toString(), jwtRefreshTokenExpiration);
+    public String generateRefreshToken(Map<String, Object> extraClaims, User user) {
+        extraClaims.put("uuid", user.getUuid());
+        extraClaims.put("token_type", "refresh");
+        return buildToken(extraClaims, user.getUuid().toString(), jwtRefreshTokenExpiration);
     }
     public boolean isTokenValidForUser(String token, User user) {
         final String tokenSubId = extractUuid(token).toString();

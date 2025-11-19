@@ -3,9 +3,11 @@ package org.ikitadevs.timerapp.dto.request;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
+@AllArgsConstructor
 public class UserCreateDto {
     @Size(max = 30, message = "Too big size for username!")
     @NotEmpty(message = "Name can't be empty!")

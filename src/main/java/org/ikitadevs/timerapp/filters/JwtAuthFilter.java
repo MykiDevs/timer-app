@@ -1,5 +1,6 @@
 package org.ikitadevs.timerapp.filters;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.FilterChain;
@@ -9,11 +10,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.ikitadevs.timerapp.dto.response.ErrorResponse;
 import org.ikitadevs.timerapp.entities.User;
 import org.ikitadevs.timerapp.entities.enums.Role;
 import org.ikitadevs.timerapp.services.JwtService;
 import org.ikitadevs.timerapp.services.UserService;
 import org.springframework.boot.autoconfigure.web.embedded.TomcatVirtualThreadsWebServerFactoryCustomizer;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,9 +34,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthFilter extends OncePerRequestFilter {
-
+    private final ObjectMapper objectMapper;
     private final JwtService jwtService;
-    private final TomcatVirtualThreadsWebServerFactoryCustomizer tomcatVirtualThreadsWebServerFactoryCustomizer;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -49,31 +51,59 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         if(SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
+                    final String tokenType = jwtService.extractTokenType(jwt);
+                    log.info(tokenType);
+                    if(!"access".equals(tokenType)) {
+                        ErrorResponse errorResponse = ErrorResponse.builder()
+                                .error("Not access token!")
+                                .build();
+                        sendErrorResponse(response, HttpStatus.BAD_REQUEST, errorResponse);
+                        return;
+                    }
                     User userDetails = new User();
                     userDetails.setUuid(jwtService.extractUuid(jwt));
                     userDetails.setEmail(jwtService.extractEmail(jwt));
                     userDetails.setActive(jwtService.extractActiveState(jwt));
-                    Set<Role> roles = jwtService.extractRoles(jwt).stream()
-                                    .map(Role::valueOf)
-                                            .collect(Collectors.toSet());
-                    userDetails.setRoles(roles);
-
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                Set<Role> roles = jwtService.extractRoles(jwt).stream()
+                        .map(Role::valueOf)
+                        .collect(Collectors.toSet());
+                userDetails.setRoles(roles);
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
                             userDetails.getAuthorities()
                     );
+
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
         } catch (ExpiredJwtException e) {
                 log.warn("Auth token is expired: {}", e.getMessage());
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                throw e;
+                ErrorResponse errorResponse = ErrorResponse.builder()
+                        .error("Token expired")
+                        .message(e.getMessage())
+                        .build();
+                sendErrorResponse(response, HttpStatus.UNAUTHORIZED, errorResponse);
+                return;
         } catch (MalformedJwtException | IllegalArgumentException e) {
                 log.warn("Auth token is invalid!");
-                throw e;
+                ErrorResponse errorResponse = ErrorResponse.builder()
+                        .error("Invalid token")
+                        .message(e.getMessage())
+                        .build();
+                sendErrorResponse(response, HttpStatus.UNAUTHORIZED, errorResponse);
+                return;
             }
         }
         filterChain.doFilter(request, response);
 }
+    private void sendErrorResponse(HttpServletResponse response, HttpStatus status, ErrorResponse errorResponse) throws IOException {
+        response.setStatus(status.value());
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        String jsonResponse = objectMapper.writeValueAsString(errorResponse);
+
+        response.getWriter().write(jsonResponse);
+    }
+
 }

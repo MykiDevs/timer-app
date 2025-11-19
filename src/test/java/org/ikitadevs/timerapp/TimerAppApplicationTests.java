@@ -14,11 +14,4 @@ class TimerAppApplicationTests {
 
     @BeforeEach
     void setup() {};
-
-    @AfterEach
-    void tearDown() {
-        = null;
-        = null;
-    }
-
 }

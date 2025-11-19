@@ -4,6 +4,7 @@ package org.ikitadevs.timerapp.dto.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.ToString;
 import org.springframework.http.HttpStatus;
 
@@ -12,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Builder
+@Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
     private final String error;

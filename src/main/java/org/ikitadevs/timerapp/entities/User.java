@@ -18,6 +18,8 @@ import java.util.*;
 @Setter
 @Entity
 @Table(name = "users")
+@AllArgsConstructor
+@ToString
 public class User implements UserDetails {
 
     @Column(nullable = false, unique = true, updatable = false)
@@ -35,7 +37,7 @@ public class User implements UserDetails {
     @NotEmpty(message = "Password can't be empty!")
     private String password;
 
-    @OneToOne(cascade = CascadeType.ALL, optional = true, fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.ALL, optional = true, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "avatar_id")
     private Avatar avatar;
 
@@ -68,8 +70,8 @@ public class User implements UserDetails {
     public String getUsername() {
         return email;
     }
-
-
+    @Override
+    public boolean isCredentialsNonExpired() {return true; }
     @Transient
     public boolean isAdmin() {
         if(getAuthorities() == null) {
