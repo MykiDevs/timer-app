@@ -42,7 +42,7 @@ public class GlobalApiExceptionHandler {
 
     @ExceptionHandler(InvalidTimerOwnerException.class)
     public ResponseEntity<ErrorResponse> handleInvalidTimerOwnerException(InvalidTimerOwnerException ex) {
-        HttpStatus status = HttpStatus.FORBIDDEN;
+        HttpStatus status = HttpStatus.BAD_REQUEST;
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .message(ex.getMessage())
                 .build();

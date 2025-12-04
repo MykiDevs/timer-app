@@ -1,6 +1,7 @@
 package org.ikitadevs.timerapp.services;
 
 
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.ikitadevs.timerapp.dto.request.PaginationRequestDto;
@@ -24,7 +25,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 import java.nio.file.AccessDeniedException;
 import java.util.List;
@@ -79,7 +79,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public PaginationResponseDto<List<UserResponseDto>> getAllUsersWithPagination(PaginationRequestDto paginationRequestDto) {
-        Sort sort = Sort.by(org.springframework.data.domain.Sort.Direction.fromString(paginationRequestDto.getSortDirection()), paginationRequestDto.getSortBy());
+        Sort sort = Sort.by(Sort.Direction.fromString(paginationRequestDto.getSortDirection()), paginationRequestDto.getSortBy());
         Pageable pageable = PageRequest.of(paginationRequestDto.getPage(), paginationRequestDto.getSize(), sort);
         Page<User> usersPage = userRepository.findAll(pageable);
         List<UserResponseDto> usersList = usersPage.getContent().stream()
