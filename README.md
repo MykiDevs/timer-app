@@ -46,16 +46,6 @@ security.jwt.refresh-token-expiration-time=86400000 # 1 day
 upload.path=./uploads
 ```
 
-### Running the App
-
-```bash
-# Run tests
-./gradlew test
-
-# Start server
-./gradlew bootRun
-```
-
 Server starts at `http://localhost:8080`.
 Swagger UI available at `http://localhost:8080/swagger-ui.html`.
 
@@ -91,13 +81,6 @@ Swagger UI available at `http://localhost:8080/swagger-ui.html`.
 - **Exception Handling:** Centralized `GlobalApiExceptionHandler` transforms business exceptions into standardized JSON error responses.
 - **Cleanup Job:** Includes a background scheduler (`TimerCleanupService`) to manage stale timer data.
 
-## Testing
-
-Integration tests use `MockMvc` with a mock database environment.
-
-```bash
-./gradlew test
-```
 
 ## Roadmap
 
