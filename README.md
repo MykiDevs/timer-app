@@ -74,16 +74,3 @@ Swagger UI available at `http://localhost:8080/swagger-ui.html`.
 | `GET` | `/api/users/profile` | Get my profile |
 | `POST` | `/api/users/profile/avatar` | Upload avatar (JPG/PNG) |
 | `PATCH` | `/api/users/profile` | Update password/email |
-
-## Architecture Highlights
-
-- **DTO Projection:** Uses JSON Views (`Views.Public`, `Views.User`, `Views.Admin`) to strictly control data exposure per endpoint without creating redundant DTO classes.
-- **Exception Handling:** Centralized `GlobalApiExceptionHandler` transforms business exceptions into standardized JSON error responses.
-- **Cleanup Job:** Includes a background scheduler (`TimerCleanupService`) to manage stale timer data.
-
-
-## Roadmap
-
-- [ ] **Cloud Storage:** Migrate `LocalStorageService` to AWS S3.
-- [ ] **Soft Delete:** Replace hard deletion of timers with an archiving strategy.
-- [ ] **WebSocket:** Add real-time timer sync across devices.
