@@ -1,4 +1,4 @@
-# Spring Boot Timer API (JWT + RBAC)
+# Spring Boot Timer API
 
 A robust backend service for managing productivity timers and user profiles. Features secure JWT authentication, role-based access control (RBAC), and avatar file management.
 
@@ -33,9 +33,10 @@ cd timer-app
 ./mwnw spring-boot:run
 ```
 Server starts at `http://localhost:8080`.
-Swagger UI available at `http://localhost:8080/swagger-ui.html`.
 
 ## API Reference
+For full API Documentation please check Swagger  `http://localhost:8080/swagger-ui/index.html`.
+
 ### Auth
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
@@ -59,3 +60,6 @@ Swagger UI available at `http://localhost:8080/swagger-ui.html`.
 | `GET` | `/api/users/profile` | Get my profile |
 | `POST` | `/api/users/profile/avatar` | Upload avatar (JPG/PNG) |
 | `PATCH` | `/api/users/profile` | Update password/email |
+
+## License
+[MIT](https://github.com/MykiDevs/timer-app/blob/main/LICENSE)
