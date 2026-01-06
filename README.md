@@ -5,12 +5,12 @@ A robust backend service for managing productivity timers and user profiles. Fea
 ## Tech Stack
 
 - **Java 17**
-- **Spring Boot 3** (Web, Security, Data JPA)
-- **PostgreSQL / H2** (Persistence)
-- **Spring Security** (Stateless JWT Auth)
-- **Apache Tika** (MIME Type Validation)
-- **MapStruct** (Zero-overhead DTO Mapping)
-- **OpenAPI / Swagger** (Documentation)
+- **Spring Boot 3**
+- **PostgreSQL / H2**
+- **Spring Security**
+- **Apache Tika**
+- **MapStruct**
+- **OpenAPI / Swagger**
 
 ## Getting Started
 
